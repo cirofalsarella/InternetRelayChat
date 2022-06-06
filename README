@@ -1,3 +1,20 @@
+# Internet Relay Chat
+   
+| Team | #USP |
+|--|--|
+| Ciro Grossi Falsarella | 11795593 |
+| Guilherme Jun Grilo | 11208350 |
+| Victor Lutes | 11795512 |
+
+---  
+
+## Inspiration  
+This is an activity to put in practice the subject Computer Networks
+
+---  
+
+## How it works
+
 para se comunicar um dos clientes terá que agir como Servidor
 
 logo, use o comando make servidor para iniciar a execução de um dos clientes que servirá como Servidor
