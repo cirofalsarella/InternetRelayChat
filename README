@@ -1,0 +1,6 @@
+para se comunicar um dos clientes terá que agir como Servidor
+
+logo, use o comando make servidor para iniciar a execução de um dos clientes que servirá como Servidor
+
+depois execute quantas vezes voce quiser o comando make cliente, 
+cada execução irá gerar um novo cliente que pode se comunicar com o servidor
