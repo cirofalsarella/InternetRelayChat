@@ -21,3 +21,5 @@ logo, use o comando make servidor para iniciar a execução de um dos clientes q
 
 depois execute quantas vezes voce quiser o comando make cliente, 
 cada execução irá gerar um novo cliente que pode se comunicar com o servidor
+
+o copy paste para mensagens maiores do que 4096 bytes n
