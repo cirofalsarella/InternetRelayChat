@@ -31,6 +31,9 @@ void *sendMessage(void *sock){
                 
             }
             if(j!=4095) buffer[4095]='\0';
+            else{
+                buffer[4095]=message[4095+i*4095];
+            }
             send(network_socket, buffer, 4096, 0);
         }
         if ((strncmp(buffer, "exit", 4)) == 0) {
@@ -52,12 +55,14 @@ void *readMessage(void *sock){
         memset(buffer, 0, sizeof(buffer));
         read(network_socket, buffer, 4096);
         if(buffer[0]!=0){
-            printf("%s\n", buffer);
+            printf(" Server message: ");
+            printf("%s", buffer);
             while (buffer[4095]!='\0'){
                 memset(buffer, 0, sizeof(buffer));
                 read(network_socket, buffer, 4096);
                 printf("%s", buffer);
             }
+            printf("\n");
         }
         if ((strncmp(buffer, "exit", 4)) == 0) {
             printf("Server Exit...\n");
