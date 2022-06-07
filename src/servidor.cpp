@@ -1,116 +1,112 @@
-// C program for the Server Side
- 
-// inet_addr
-#include <arpa/inet.h>
- 
-// For threading, link with lpthread
-#include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+
 #include <unistd.h>
- 
-// Semaphore variables
-sem_t x, y;
-pthread_t tid;
-pthread_t writerThread;
-pthread_t readerThread;
-int readercount = 0;
- 
-// Reader Function
-void* reader(void* param) {
-    // Lock the semaphore
-    sem_wait(&x);
-    readercount++;
- 
-    if (readercount == 1)
-        sem_wait(&y);
- 
-    // Unlock the semaphore
-    sem_post(&x);
- 
-    printf("\n%d reader is inside",
-           readercount);
- 
-    sleep(5);
- 
-    // Lock the semaphore
-    sem_wait(&x);
-    readercount--;
- 
-    if (readercount == 0) {
-        sem_post(&y);
+#include <string>
+#include <iostream>
+#include <pthread.h>
+#include <semaphore.h>
+#define MAX 80
+#define PORT 8080
+#define SA struct sockaddr
+using namespace std;
+int connfd;
+bool hasQuit=false;
+void *sendMessage(void *sock){
+    char buffer[4096] = { 0 };
+    string message;
+    int network_socket = connfd, j;
+    while(!hasQuit){
+        getline(cin, message);
+        for(int i=0; i<=message.length()/4095; ++i){
+            memset(buffer, 0, sizeof(buffer));
+            for(j=0; j<message.length()-i*4095 && j<4096; ++j){
+                buffer[j]=message[j+i*4095];
+                
+            }
+            if(j!=4095) buffer[4095]='\0';
+            send(network_socket, buffer, 4096, 0);
+        }
+        if ((strncmp(buffer, "exit", 4)) == 0) {
+            printf("Server Exit...\n");
+            hasQuit=true;
+            pthread_exit(NULL);
+            return NULL;
+        }
     }
- 
-    // Lock the semaphore
-    sem_post(&x);
- 
-    printf("\n%d Reader is leaving",
-           readercount + 1);
+
     pthread_exit(NULL);
+    return NULL;
 }
- 
-// Writer Function
-void* writer(void* param)
-{
-    printf("\nWriter is trying to enter");
- 
-    // Lock the semaphore
-    sem_wait(&y);
- 
-    printf("\nWriter has entered");
- 
-    // Unlock the semaphore
-    sem_post(&y);
- 
-    printf("\nWriter is leaving");
-    pthread_exit(NULL);
-}
- 
-// Driver Code
-int main() {
-    // Initialize variables
-    int serverSocket, newSocket;
-    struct sockaddr_in serverAddr;
-    struct sockaddr_storage serverStorage;
- 
-    socklen_t addr_size;
-    sem_init(&x, 0, 1);
-    sem_init(&y, 0, 1);
- 
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8989);
- 
-    // Bind the socket to the address and port number.
-    bind(serverSocket,
-         (struct sockaddr*)&serverAddr,
-         sizeof(serverAddr));
- 
-    // Array for thread
-    pthread_t tid[60];
- 
-    int i = 0;
-    while (true) {
-        addr_size = sizeof(serverStorage);
- 
-        // Extract the first
-        // connection in the queue
-        newSocket = accept(serverSocket, (struct sockaddr*)&serverStorage, &addr_size);
-        
-        // [FLAG!] Não sei pra que serve
-        // int choice = 0;
-        // recv(newSocket, &choice, sizeof(choice), 0);
- 
-        pthread_create(&readerThread, NULL, reader, &newSocket);
-        pthread_create(&writerThread, NULL, writer, &newSocket);
- 
-        pthread_join(writerThread, NULL);
-        pthread_join(readerThread, NULL);
+
+void *readMessage(void *sock){
+    int network_socket = connfd;
+    char buffer[4096] = { 0 };
+    while(!hasQuit){
+        memset(buffer, 0, sizeof(buffer));
+        read(network_socket, buffer, 4096);
+        if(buffer[0]!=0){
+            printf("%s\n", buffer);
+            while (buffer[4095]!='\0'){
+                memset(buffer, 0, sizeof(buffer));
+                read(network_socket, buffer, 4096);
+                printf("%s", buffer);
+            }
+        }
+        if ((strncmp(buffer, "exit", 4)) == 0) {
+            printf("Client Exit...\n");
+            hasQuit=true;
+            pthread_exit(NULL);
+            return NULL;
+        }
     }
- 
+    
+    pthread_exit(NULL);
+    return NULL;
+}
+
+int main(){
+    int sockfd, len;
+    struct sockaddr_in servaddr, cli;
+   
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    memset(&servaddr, 0, sizeof(servaddr));
+   
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(PORT);
+   
+    bind(sockfd, (SA*)&servaddr, sizeof(servaddr));
+   
+    if ((listen(sockfd, 5)) != 0) {
+        printf("Listen failed...\n");
+        exit(0);
+    }
+    else
+        printf("Server listening..\n");
+    len = sizeof(cli);
+   
+    connfd = accept(sockfd, (SA*)&cli, (socklen_t*)&len);
+    if (connfd < 0) {
+        printf("server accept failed...\n");
+        exit(0);
+    }
+    else
+        printf("server accept the client...\n");
+   
+    pthread_t writer, reader;
+    pthread_create(&writer, NULL,sendMessage, &connfd);
+    pthread_create(&reader, NULL, readMessage, &connfd);
+
+    pthread_join(writer, NULL);
+    pthread_join(reader, NULL);
+
+    close(sockfd);
     return 0;
 }
