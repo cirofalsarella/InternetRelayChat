@@ -84,6 +84,7 @@ void *readMessage(void *sock){
 int main(){
     int sockfd, len;
     struct sockaddr_in servaddr, cli;
+    //criar um vetor de conexoes e um map para os nicks
    
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     memset(&servaddr, 0, sizeof(servaddr));
