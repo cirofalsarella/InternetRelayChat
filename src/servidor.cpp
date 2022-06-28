@@ -16,6 +16,9 @@
 #define PORT 8080
 #define SA struct sockaddr
 using namespace std;
+
+pthread_t writer, reader;
+
 int connfd;
 bool hasQuit=false;
 void *sendMessage(void *sock){
@@ -39,6 +42,7 @@ void *sendMessage(void *sock){
         if ((strncmp(buffer, "exit", 4)) == 0) {
             printf("Server Exit...\n");
             hasQuit=true;
+            pthread_cancel(reader);
             pthread_exit(NULL);
             return NULL;
         }
@@ -67,6 +71,7 @@ void *readMessage(void *sock){
         if ((strncmp(buffer, "exit", 4)) == 0) {
             printf("Client Exit...\n");
             hasQuit=true;
+            pthread_cancel(writer);
             pthread_exit(NULL);
             return NULL;
         }
@@ -105,12 +110,11 @@ int main(){
     else
         printf("server accept the client...\n");
    
-    pthread_t writer, reader;
     pthread_create(&writer, NULL,sendMessage, &connfd);
     pthread_create(&reader, NULL, readMessage, &connfd);
 
-    pthread_join(writer, NULL);
     pthread_join(reader, NULL);
+    pthread_join(writer, NULL);
 
     close(sockfd);
     return 0;
