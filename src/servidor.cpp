@@ -45,7 +45,6 @@ map<string, int> nickToConnfd;//mapeia os strings nick para os respectivos ender
 map<string, vector<int>> channelsToConns;//mapeia os channel names para os connfds conectados a ele VAI PRECISAR USAR LOCK
 map<string, int> channelsToAdmins;//mapeia os channel names para os connfd dos admins
 map<string, vector<int>> muted;//mapeia os canais na lista de mutados
-bool hasQuit=false;
 
 void removeAndDisconnect(int con){
     for(int i=0; i<(int) connections.size(); ++i){
@@ -146,7 +145,7 @@ void *recieveAndForward(void *sock){
     string nick="nick"+to_string(network_socket);
     nickToConnfd[nick]=network_socket;
     char buffer[4096] = { 0 };
-    while(!hasQuit){
+    while(true){
         memset(buffer, 0, sizeof(buffer));
         read(network_socket, buffer, 4096);
         if(buffer[0]!=0 && (buffer[0]!='a'  || buffer[1]!='c' || buffer[2]!='k')){
