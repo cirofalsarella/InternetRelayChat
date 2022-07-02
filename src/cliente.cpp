@@ -12,24 +12,43 @@
 #include <semaphore.h>
 
 #define MAX 80
-#define PORT 8080
+#define PORT 3002
 #define SA struct sockaddr
 using namespace std;
 pthread_t writer, reader;
 
 int sockfd;
 bool hasQuit=false;
+
+void sendAck(){
+    char buf[4096];
+    memset(buf, 0, sizeof(buf));
+    buf[0]='a';
+    buf[1]='c';
+    buf[2]='k';
+    send(sockfd, buf, 4096, 0);
+}
+
 void *sendMessage(void *sock){
     char buffer[4096] = { 0 };
     string message;
     int network_socket = sockfd, j;
     while(!hasQuit){
         getline(cin, message);
+        if(cin.eof()){
+            memset(buffer, 0, sizeof(buffer));
+            buffer[0]='/';buffer[1]='q';buffer[2]='u';buffer[3]='i';buffer[4]='t';buffer[5]='\0';
+            send(network_socket, buffer, 4096, 0);
+            printf("Client Exit...\n");
+            hasQuit=true;
+            pthread_cancel(reader);
+            pthread_exit(NULL);
+            return NULL;
+        }
         for(int i=0; i<=message.length()/4095; ++i){
             memset(buffer, 0, sizeof(buffer));
             for(j=0; j<message.length()-i*4095 && j<4096; ++j){
                 buffer[j]=message[j+i*4095];
-                
             }
             if(j!=4095) buffer[4095]='\0';
             else{
@@ -37,7 +56,7 @@ void *sendMessage(void *sock){
             }
             send(network_socket, buffer, 4096, 0);
         }
-        if ((strncmp(buffer, "exit", 4)) == 0) {
+        if ((strncmp(buffer, "/quit", 4)) == 0){
             printf("Client Exit...\n");
             hasQuit=true;
             pthread_cancel(reader);
@@ -57,21 +76,15 @@ void *readMessage(void *sock){
         memset(buffer, 0, sizeof(buffer));
         read(network_socket, buffer, 4096);
         if(buffer[0]!=0){
-            printf(" Server message: ");
+            sendAck();
             printf("%s", buffer);
             while (buffer[4095]!='\0'){
                 memset(buffer, 0, sizeof(buffer));
                 read(network_socket, buffer, 4096);
+                sendAck();
                 printf("%s", buffer);
             }
             printf("\n");
-        }
-        if ((strncmp(buffer, "exit", 4)) == 0) {
-            printf("Server Exit...\n");
-            hasQuit=true;
-            pthread_cancel(writer);
-            pthread_exit(NULL);
-            return NULL;
         }
     }
     
@@ -86,15 +99,20 @@ int main(){
     memset(&servaddr, 0, sizeof(servaddr));
    
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");//trocar pelo ip do servidor se ele está em outra rede
     servaddr.sin_port = htons(PORT);
-   
+    string s;
+    cin >> s;
+    while(s.compare("/connect")){
+        cout<<"escreva /connect para se conectar ao servidor" << endl;
+        cin >> s;
+    }
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
         printf("connection with the server failed...\n");
         exit(0);
     }
     else
-        printf("connected to the server..\n");
+        printf("connected to the server...\n");
    
     
     pthread_create(&writer, NULL,sendMessage, &sockfd);
