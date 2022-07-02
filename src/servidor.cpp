@@ -38,13 +38,13 @@ Comandos apenas para administradores de canais:
 vector<pthread_t> recieveAndForwardThreads;
 int connfd;
 vector<int> connections; //lista dos connfd conectados VAI PRECISAR USAR LOCK
-map<int, string> connToIp;
-map<int, pthread_t> connToThread;
+map<int, string> connToIp;//VAI PRECISAR USAR LOCK
+map<int, pthread_t> connToThread;// VAI PRECISAR USAR LOCK
 map<int, vector<string>> connToChannels;//mapeia os connfd nos caneis que ele está conectado VAI PRECISAR USAR LOCK
 map<string, int> nickToConnfd;//mapeia os strings nick para os respectivos enderecos connfd VAI PRECISAR USAR LOCK
 map<string, vector<int>> channelsToConns;//mapeia os channel names para os connfds conectados a ele VAI PRECISAR USAR LOCK
-map<string, int> channelsToAdmins;//mapeia os channel names para os connfd dos admins
-map<string, vector<int>> muted;//mapeia os canais na lista de mutados
+map<string, int> channelsToAdmins;//mapeia os channel names para os connfd dos admins VAI PRECISAR USAR LOCK
+map<string, vector<int>> muted;//mapeia os canais na lista de mutados VAI PRECISAR USAR LOCK
 
 void removeAndDisconnect(int con){
     for(int i=0; i<(int) connections.size(); ++i){
@@ -52,6 +52,7 @@ void removeAndDisconnect(int con){
     }
     connToIp.erase(con);
     connToChannels.erase(con);
+    //FALTA FECHAR A CONEXAO
 }
 
 bool sendAndAck(int con, char *buffer){
