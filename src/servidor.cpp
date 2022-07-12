@@ -52,7 +52,6 @@ void removeAndDisconnect(int con){
     }
     connToIp.erase(con);
     connToChannels.erase(con);
-    //FALTA FECHAR A CONEXAO
 }
 
 bool sendAndAck(int con, char *buffer){
@@ -152,7 +151,7 @@ void *recieveAndForward(void *sock){
         if(buffer[0]!=0 && (buffer[0]!='a'  || buffer[1]!='c' || buffer[2]!='k')){
             if(buffer[0]=='/'){
                 if ((strstr(buffer, "/quit")) != NULL) {
-                    cout<<nick<<"has quit"<<endl;
+                    cout<<nick<<" has quit"<<endl;
                     removeAndDisconnect(network_socket);
                     pthread_exit(NULL);
                     return NULL;
@@ -160,7 +159,7 @@ void *recieveAndForward(void *sock){
                 else if((strstr(buffer, "/ping")) != NULL){
                     sendPongToAll();
                 }
-                else if((strstr(buffer, "/join")) != NULL){
+                else if((strstr(buffer, "/join")) != NULL && (int) strlen(buffer)>6){
                     string s=string(&buffer[6], strlen(buffer)-6);
 
                     if(channelsToConns.find(s)==channelsToConns.end()){
@@ -194,7 +193,7 @@ void *recieveAndForward(void *sock){
                     }
                     
                 }
-                else if((strstr(buffer, "/nickname")) != NULL){
+                else if((strstr(buffer, "/nickname")) != NULL && strlen(buffer)>10){
                     string s=string(&buffer[10], strlen(buffer)-10);
                     nickToConnfd.erase(nick);
                     nickToConnfd[s]=network_socket;
@@ -202,7 +201,7 @@ void *recieveAndForward(void *sock){
                     nick=s;
 
                 }
-                else if((strstr(buffer, "/kick")) != NULL){
+                else if((strstr(buffer, "/kick")) != NULL && strlen(buffer)>6){
                     string name=string(&buffer[6], strlen(buffer)-6);
                     cout << name << endl;
                     int removing=nickToConnfd[name];
@@ -225,7 +224,7 @@ void *recieveAndForward(void *sock){
                         }
                     }
                 }
-                else if((strstr(buffer, "/mute")) != NULL){
+                else if((strstr(buffer, "/mute")) != NULL && strlen(buffer)>6){
                     //olha se esse usuario é admin de um canal, se for, remove o usuario selecionado do canal
                     string name=string(&buffer[6], strlen(buffer)-6);
                     int muting=nickToConnfd[name];
@@ -242,7 +241,7 @@ void *recieveAndForward(void *sock){
                         }
                     }
                 }
-                else if((strstr(buffer, "/unmute")) != NULL){
+                else if((strstr(buffer, "/unmute")) != NULL && strlen(buffer)>8){
                     string name=string(&buffer[8], strlen(buffer)-8);
                     int unmuting=nickToConnfd[name];
                     vector<string> channels=connToChannels[network_socket];
@@ -258,7 +257,7 @@ void *recieveAndForward(void *sock){
                         }
                     }
                 }
-                else if((strstr(buffer, "/whois")) != NULL){
+                else if((strstr(buffer, "/whois")) != NULL && strlen(buffer)>7){
                     string name=string(&buffer[7], strlen(buffer)-7);
                     int gettingIp=nickToConnfd[name];
                     vector<string> hisChannels=connToChannels[gettingIp];
@@ -326,8 +325,10 @@ int main(){
     else
         printf("Server listening...\n");
     len = sizeof(cli);
-    //MAKE WHILE TO CONNECT MULTIPLE CLIENTS
+    
+    bool firstCon=true;
     while(true){
+        if(!firstCon && connections.empty()) break;
         connfd = accept(sockfd, (SA*)&cli, (socklen_t*)&len);
         if (connfd < 0) {
             printf("server accept failed...\n");
@@ -342,9 +343,9 @@ int main(){
         string clientip(inet_ntoa(cli.sin_addr));
         connToIp[connfd]=clientip;
         pthread_create(&newThread, NULL,recieveAndForward, &connfd);
+        firstCon=false;
     }
-    for(int i=0; i<(int) recieveAndForwardThreads.size(); ++i)
-        pthread_join(recieveAndForwardThreads[i], NULL);
+    cout << "all connections terminated"<< endl;
 
     close(sockfd);
     return 0;
