@@ -19,6 +19,7 @@
 #define PORT 3002
 #define SA struct sockaddr
 using namespace std;
+
 /*
 • /connect - Estabelece a conexão com o servidor;
 • /quit - O cliente fecha a conexão e fecha a aplicação;
@@ -37,14 +38,14 @@ Comandos apenas para administradores de canais:
 
 vector<pthread_t> recieveAndForwardThreads;
 int connfd;
-vector<int> connections; //lista dos connfd conectados VAI PRECISAR USAR LOCK
-map<int, string> connToIp;//VAI PRECISAR USAR LOCK
-map<int, pthread_t> connToThread;// VAI PRECISAR USAR LOCK
-map<int, vector<string>> connToChannels;//mapeia os connfd nos caneis que ele está conectado VAI PRECISAR USAR LOCK
-map<string, int> nickToConnfd;//mapeia os strings nick para os respectivos enderecos connfd VAI PRECISAR USAR LOCK
-map<string, vector<int>> channelsToConns;//mapeia os channel names para os connfds conectados a ele VAI PRECISAR USAR LOCK
-map<string, int> channelsToAdmins;//mapeia os channel names para os connfd dos admins VAI PRECISAR USAR LOCK
-map<string, vector<int>> muted;//mapeia os canais na lista de mutados VAI PRECISAR USAR LOCK
+vector<int> connections;            // lista dos connfd conectados [FLAG] - Semáfaro
+map<int, string> connToIp;          // [FLAG] - Semáfaro
+map<int, pthread_t> connToThread;   // [FLAG] - Semáfaro
+map<int, vector<string>> connToChannels;    // mapeia os connfd nos caneis que ele está conectado [FLAG] - Semáfaro
+map<string, int> nickToConnfd;      // mapeia os strings nick para os respectivos enderecos connfd [FLAG] - Semáfaro
+map<string, vector<int>> channelsToConns;   // mapeia os channel names para os connfds conectados a ele [FLAG] - Semáfaro
+map<string, int> channelsToAdmins;  // mapeia os channel names para os connfd dos admins [FLAG] - Semáfaro
+map<string, vector<int>> muted;     // mapeia os canais na lista de mutados [FLAG] - Semáfaro
 
 void removeAndDisconnect(int con){
     for(int i=0; i<(int) connections.size(); ++i){
@@ -52,7 +53,6 @@ void removeAndDisconnect(int con){
     }
     connToIp.erase(con);
     connToChannels.erase(con);
-    //FALTA FECHAR A CONEXAO
 }
 
 bool sendAndAck(int con, char *buffer){
@@ -63,7 +63,9 @@ bool sendAndAck(int con, char *buffer){
         read(con, rec, 4096);
         if(rec[0]=='a' && rec[1]=='c' && rec[2]=='k') return true;
     }
+
     //nao recebeu ack depois de 5 tentativas, fechar conexao
+    
     return false;
 }
 
@@ -226,7 +228,7 @@ void *recieveAndForward(void *sock){
                     }
                 }
                 else if((strstr(buffer, "/mute")) != NULL){
-                    //olha se esse usuario é admin de um canal, se for, remove o usuario selecionado do canal
+                    // olha se esse usuario é admin de um canal, se for, remove o usuario selecionado do canal
                     string name=string(&buffer[6], strlen(buffer)-6);
                     int muting=nickToConnfd[name];
                     vector<string> hisChannels=connToChannels[muting];

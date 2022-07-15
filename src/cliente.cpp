@@ -35,6 +35,8 @@ void *sendMessage(void *sock){
     int network_socket = sockfd, j;
     while(!hasQuit){
         getline(cin, message);
+        // [FLAG] Ler o ctrl+C
+        // "Handler ctrl+c C++"
         if(cin.eof()){
             memset(buffer, 0, sizeof(buffer));
             buffer[0]='/';buffer[1]='q';buffer[2]='u';buffer[3]='i';buffer[4]='t';buffer[5]='\0';
