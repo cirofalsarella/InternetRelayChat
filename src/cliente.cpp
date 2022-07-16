@@ -10,6 +10,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <semaphore.h>
+#include <signal.h>
 
 #define MAX 80
 #define PORT 3002
@@ -29,14 +30,31 @@ void sendAck(){
     send(sockfd, buf, 4096, 0);
 }
 
+string readLine() {
+    string str;
+    char at = getchar();
+    // FLAG -> mudar getchar pra outra função que corrija o bug
+    while(at != EOF && at != '\r' && at != '\n') {
+        str += at;
+        at = getchar();
+    // FLAG -> mudar getchar pra outra função que corrija o bug
+        cout << str << endl;
+    }
+
+    if (at != EOF && str.length() == 0)
+        str  = readLine();
+    
+    return str;
+}
+
 void *sendMessage(void *sock){
     char buffer[4096] = { 0 };
     string message;
     int network_socket = sockfd, j;
     while(!hasQuit){
-        getline(cin, message);
-        // [FLAG] Ler o ctrl+C
-        // "Handler ctrl+c C++"
+        message = readLine();
+        cout << message << endl;
+
         if(cin.eof()){
             memset(buffer, 0, sizeof(buffer));
             buffer[0]='/';buffer[1]='q';buffer[2]='u';buffer[3]='i';buffer[4]='t';buffer[5]='\0';
@@ -56,6 +74,7 @@ void *sendMessage(void *sock){
             else{
                 buffer[4095]=message[4095+i*4095];
             }
+
             send(network_socket, buffer, 4096, 0);
         }
         if ((strncmp(buffer, "/quit", 4)) == 0){
@@ -93,6 +112,10 @@ void *readMessage(void *sock){
     pthread_exit(NULL);
     return NULL;
 }
+
+void sigintHandler(int sig_num) {
+    signal(SIGINT, sigintHandler);
+}
    
 int main(){
     struct sockaddr_in servaddr, cli;
@@ -103,10 +126,12 @@ int main(){
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");//trocar pelo ip do servidor se ele está em outra rede
     servaddr.sin_port = htons(PORT);
+    
     string s;
     cin >> s;
+    
     while(s.compare("/connect")){
-        cout<<"escreva /connect para se conectar ao servidor" << endl;
+        cout<<"write /connect to connect" << endl;
         cin >> s;
     }
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
@@ -116,7 +141,7 @@ int main(){
     else
         printf("connected to the server...\n");
    
-    
+   
     pthread_create(&writer, NULL,sendMessage, &sockfd);
     pthread_create(&reader, NULL, readMessage, &sockfd);
 
