@@ -44,7 +44,6 @@ string readLine() {
   while (at != EOF && at != '\r' && at != '\n') {
     line += at;
     at = getchar();
-    cout << line << endl;
   }
 
   if (at != EOF && line.length() == 0)
@@ -141,6 +140,7 @@ void *readMessage(void *sock) {
 
 // Just ignores ctrl+c
 void sigintHandler(int sig_num) {
+  printf("\nSorry, you can't do it. Try again.\n");
   return;
 }
 
