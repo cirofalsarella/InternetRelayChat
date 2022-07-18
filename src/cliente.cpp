@@ -14,7 +14,11 @@
 
 #define MAX 80
 #define PORT 3002
+#define IP "127.0.0.1"
+// Use server IP if in another network
+
 #define SA struct sockaddr
+
 using namespace std;
 pthread_t writer, reader;
 
@@ -31,35 +35,35 @@ void sendAck() {
 }
 
 string readLine() {
-  string str;
+  // Faltou aplicar nessa função alguma leitura que lesse diretamente o que é digitado
+  // Depois que apertamos o 'ctrl+c' o buffer da linha é limpo, perdendo as informações anteriores
+
+  string line = "";
   char at = getchar();
-  // FLAG -> mudar getchar pra outra função que corrija o bug
+
   while (at != EOF && at != '\r' && at != '\n') {
-    str += at;
+    line += at;
     at = getchar();
-    // FLAG -> mudar getchar pra outra função que corrija o bug
-    cout << str << endl;
+    cout << line << endl;
   }
 
-  if (at != EOF && str.length() == 0)
-    str = readLine();
+  if (at != EOF && line.length() == 0)
+    line = readLine();
 
-  return str;
-}
-
-void sigintHandler(int sig_num) {
-  signal(SIGINT, sigintHandler);
+  return line;
 }
 
 void *sendMessage(void *sock) {
+  // Set buffer and other variables
   char buffer[4096] = {0};
   string message;
   int network_socket = sockfd, j;
-  while (!hasQuit) {
-    sigintHandler(1);
-    message = readLine();
-    cout << message << endl;
 
+  while (!hasQuit) {
+    // Read the message of the client
+    message = readLine();
+
+    // End of messages
     if (cin.eof()) {
       memset(buffer, 0, sizeof(buffer));
       buffer[0] = '/';
@@ -75,19 +79,23 @@ void *sendMessage(void *sock) {
       pthread_exit(NULL);
       return NULL;
     }
+
+    // Send message in portions of 4095 bytes till we send the full message
     for (int i = 0; i <= message.length() / 4095; ++i) {
       memset(buffer, 0, sizeof(buffer));
       for (j = 0; j < message.length() - i * 4095 && j < 4096; ++j) {
         buffer[j] = message[j + i * 4095];
       }
+
       if (j != 4095)
         buffer[4095] = '\0';
-      else {
+      else
         buffer[4095] = message[4095 + i * 4095];
-      }
 
       send(network_socket, buffer, 4096, 0);
     }
+
+    // Forced Quit
     if ((strncmp(buffer, "/quit", 4)) == 0) {
       printf("Client Exit...\n");
       hasQuit = true;
@@ -102,13 +110,20 @@ void *sendMessage(void *sock) {
 }
 
 void *readMessage(void *sock) {
+  // Set variables
   int network_socket = sockfd;
   char buffer[4096] = {0};
+
   while (!hasQuit) {
+    // Get buffer info
     memset(buffer, 0, sizeof(buffer));
     read(network_socket, buffer, 4096);
+
+    // If there is a message
     if (buffer[0] != 0) {
       sendAck();
+
+      // Print the different parts of the message
       printf("%s", buffer);
       while (buffer[4095] != '\0') {
         memset(buffer, 0, sizeof(buffer));
@@ -124,14 +139,22 @@ void *readMessage(void *sock) {
   return NULL;
 }
 
+// Just ignores ctrl+c
+void sigintHandler(int sig_num) {
+  return;
+}
+
 int main() {
+  // Set to ignore ctrl C calls
+  signal(SIGINT, sigintHandler);
   struct sockaddr_in servaddr, cli;
 
+  // Set socket and its address
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&servaddr, 0, sizeof(servaddr));
 
   servaddr.sin_family = AF_INET;
-  servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");  // trocar pelo ip do servidor se ele está em outra rede
+  servaddr.sin_addr.s_addr = inet_addr(IP);
   servaddr.sin_port = htons(PORT);
 
   string s;
@@ -147,6 +170,7 @@ int main() {
   } else
     printf("connected to the server...\n");
 
+  // Begin connection
   pthread_create(&writer, NULL, sendMessage, &sockfd);
   pthread_create(&reader, NULL, readMessage, &sockfd);
 
