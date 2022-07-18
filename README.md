@@ -13,7 +13,7 @@
 ## Inspiração  
 Essa é uma atividade para se colocar em prática a disciplina "Redes de Computadores".
 
-## Como funciona (PT-BR)
+## Como funciona
 
 Para se comunicar um dos clientes terá que agir como Servidor. Logo, use o comando `make servidor -B` para iniciar a execução de um dos clientes que servirá como Servidor. Depois execute o comando `make cliente -B`, para se comunicar com o servidor. Com isso os dois programas podem enviar mensagens um para o outro.
 
@@ -29,7 +29,7 @@ Envie a mensagem `/quit` para parar a execucao.
 | /join [NOME_CANAL] | Entra ou cria um canal
 | /nickname [NICKNAME] | Cliente muda seu nickname
 
-|Comandos (admins)| |
+|Comandos (administradores)| |
 |--|--|
 | /kick [NICKNAME] | Fecha a conexão de um cliente
 | /mute [NICKNAME] | Bloqueia um usuário de mandar mensagens em um canal
@@ -43,7 +43,7 @@ Envie a mensagem `/quit` para parar a execucao.
 ## Inspiration  
 This is an activity to put in practice the subject Computer Networks.
 
-## How it works (EN)
+## How it works
 
 For a client communicate to a server, you have to use the terminal command `make servidor -B` to start an execution of a client as a server. Then, run `make cliente -B` to create a client that will communicate to the running server. After that, the both programs can send messages to each other.
 
