@@ -20,32 +20,18 @@
 #define SA struct sockaddr
 using namespace std;
 
-/*
-• /connect - Estabelece a conexão com o servidor;
-• /quit - O cliente fecha a conexão e fecha a aplicação;
-• /ping - O servidor retorna "pong"assim que receber a mensagem.
-
-• /join nomeCanal - Entra no canal;
-• /nickname apelidoDesejado - O cliente passa a ser reconhecido pelo apelido especificado;
-• /ping - O servidor retorna "pong"assim que receber a mensagem.
-Comandos apenas para administradores de canais:
-• /kick nomeUsuario - Fecha a conexão de um usuário especificado
-• /mute nomeUsuario - Faz com que um usuário não possa enviar mensagens neste canal
-• /unmute nomeUsuario - Retira o mute de um usuário.
-• /whois nomeUsuario - Retorna o endereço IP do usuário apenas para o administrador
-*/
-
 
 vector<pthread_t> recieveAndForwardThreads;
 int connfd;
-vector<int> connections;            // lista dos connfd conectados [FLAG] - Semáfaro
-map<int, string> connToIp;          // [FLAG] - Semáfaro
-map<int, pthread_t> connToThread;   // [FLAG] - Semáfaro
-map<int, vector<string>> connToChannels;    // mapeia os connfd nos caneis que ele está conectado [FLAG] - Semáfaro
-map<string, int> nickToConnfd;      // mapeia os strings nick para os respectivos enderecos connfd [FLAG] - Semáfaro
-map<string, vector<int>> channelsToConns;   // mapeia os channel names para os connfds conectados a ele [FLAG] - Semáfaro
-map<string, int> channelsToAdmins;  // mapeia os channel names para os connfd dos admins [FLAG] - Semáfaro
-map<string, vector<int>> muted;     // mapeia os canais na lista de mutados [FLAG] - Semáfaro
+vector<int> connections;            // lista dos connfd conectados
+map<int, string> connToIp;          //
+map<int, pthread_t> connToThread;   //
+map<int, vector<string>> connToChannels;    // mapeia os connfd nos canais que ele está conectado
+map<string, int> nickToConnfd;      // mapeia os strings nick para os respectivos enderecos connfd
+map<string, vector<int>> channelsToConns;   // mapeia os channel names para os connfds conectados a ele
+map<string, int> channelsToAdmins;  // mapeia os channel names para os connfd dos admins
+map<string, vector<int>> muted;     // mapeia os canais na lista de mutados
+
 
 void removeAndDisconnect(int con){
     for(int i=0; i<(int) connections.size(); ++i){

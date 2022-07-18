@@ -26,3 +26,20 @@ Com isso os dois programas podem enviar mensagens um para o outro
 o copy paste para mensagens maiores do que 4096 bytes não funciona, mas mensagens que são maiores do que esse tamanho sao divididas, enviadas e remontadas
 
 envie a mensagem exit para parar a execucao
+
+
+|Comands| |
+|--|--|
+| /connect | Stablish connection with server
+| /quit | Client closes the application
+| /ping | Server send a pong
+| /join [CHANNEL] | Join or Create a channel  
+| /nickname [NICKNAME] | Client will be recognized by the nickname
+
+|Comands (admins)| |
+|--|--|
+| /kick [NICKNAME] | Close connection of an user
+| /mute [NICKNAME] | Forbids an user of sending messages
+| /unmute [NICKNAME] | Removes mute of an user  
+| /whois [NICKNAME] | Returns IP address of an user
+
