@@ -23,7 +23,7 @@ using namespace std;
 
 vector<pthread_t> recieveAndForwardThreads;
 int connfd;
-vector<int> connections;            // lista dos connfd conectados
+vector<int> connections;
 map<int, string> connToIp;          //
 map<int, pthread_t> connToThread;   //
 map<int, vector<string>> connToChannels;    // mapeia os connfd nos canais que ele está conectado
@@ -162,7 +162,7 @@ void *recieveAndForward(void *sock){
                             cout<<nick<<" has created channel "<<s<<endl;
                         }
                         else{
-                            cout<<nick<<" didnt create channel because name was invalid"<<endl;
+                            cout << nick << " didnt create channel because name was invalid"<<endl;
                         }
                     }
                     else{
@@ -184,10 +184,16 @@ void *recieveAndForward(void *sock){
                 }
                 else if((strstr(buffer, "/nickname")) != NULL && strlen(buffer)>10){
                     string s=string(&buffer[10], strlen(buffer)-10);
-                    nickToConnfd.erase(nick);
-                    nickToConnfd[s]=network_socket;
-                    cout<<nick<<" has changed nick to "<<s<<endl;
-                    nick=s;
+
+                    if (s.length() > 50) {
+                        cout << "nickname has to be smaller than 50 ASCII chars." << endl;
+                    } else {
+
+                        nickToConnfd.erase(nick);
+                        nickToConnfd[s]=network_socket;
+                        cout<<nick<<" has changed nick to "<<s<<endl;
+                        nick=s;
+                    }
 
                 }
                 else if((strstr(buffer, "/kick")) != NULL && strlen(buffer)>6){

@@ -44,7 +44,7 @@ string readLine() {
     while(at != EOF && at != '\r' && at != '\n') {
         line += at;
         at = getchar();
-        cout << line << endl;
+        // cout << line << endl;
     }
 
     if (at != EOF && line.length() == 0)
