@@ -8,6 +8,9 @@
 
 ---  
 
+Link para o vídeo:
+https://youtu.be/plxJMSyRRpw
+
 # PT-BR
 
 ## Inspiração  
